@@ -1,5 +1,6 @@
 import logging
 import knime.extension as knext
+import lwreg.standardization_lib
 import pandas as pd
 import numpy as np
 LOGGER = logging.getLogger(__name__)
@@ -7,6 +8,7 @@ LOGGER = logging.getLogger(__name__)
 # Importing LWReg: https://github.com/rinikerlab/lightweight-registration/
 import lwreg
 from lwreg import utils
+from pathlib import Path
 lwreg.set_default_config(utils.defaultConfig()) # Configure LWReg with default settings
 
 # Specifying our category: https://docs.knime.com/latest/pure_python_node_extensions_guide/index.html#_specifying_the_node_category
@@ -23,62 +25,82 @@ lwreg.set_default_config(utils.defaultConfig()) # Configure LWReg with default s
 #################################
 @knext.node(name="LWReg Initialize Database", node_type=knext.NodeType.SOURCE, icon_path="icon.png", category="/")
 class LWRegInitNode:
-    """Delete prior database and initialize new one.
-    This node can be used to initialize a LWReg database. This deletes any saved data, so use with caution. Checkbox in configuration must be checked.    
-    """
+    """Initialize new database
+    This node can be used to initialize a LWReg database. In case the database already exists, nothing happens.
+    Which Standardization should be applied?
 
-    # init_checkbox = knext.BoolParameter("Delete all prior data", "Just for testing", False)
-    init_checkbox = knext.BoolParameter(
-        label="Overwrite existing LWReg Database",
-        description="Check this to initialize and thus overwrite any existing LWREG database under the given path (this action is irreversible).",
-        default_value=False
-    )
+| Option | Description |
+| ------- | ----------- |
+| none | does not modify the molecule |
+| sanitize | Standard RDKit standardization |
+| fragment | Fragment parent of molecule |
+| charge | Charge Parent of molecule |
+| tautomer | Tautomer parent of molecule |
+
+    """
 
     # String input to specify the database path
     db_path_input = knext.StringParameter(
         label="Database Path",
-        description="Specify the path to the LWREG database file.",
-        default_value="C:/Users/Tugrul Kaynak/Box/Tugrul Kaynak Personal/Projects/24-rdkit-ugm/database/lwreg_database.sqlt"
+        description="Specify the full path to the LWREG database file.",
+        default_value="lwreg.sql"
     )
 
+    description = """
+Which Standardization should be applied?
+"""
+
+    db_standardization_operations = knext.StringParameter(label="Standardization Operation",
+                                                          enum=["none","sanitize","fragment","charge","tautomer"],
+                                                          default_value="fragment",
+                                                          description=description)
+    db_remove_Hs = knext.BoolParameter("Remove Hydrogens",description="Should Hydrogens be removed?")
+    db_conformer_mode = knext.BoolParameter("Conformer Mode",description="Should Conformers be registered?")
+    db_canonical_orientation = knext.BoolParameter("Canonical Orientation",description="Should the orientation be canonicalized?")
+    db_standardization_operations_opt = [db_standardization_operations,"canonicalize"] if db_standardization_operations else [db_standardization_operations]
+    
+    init_custom_config = {
+        "dbname": str(db_path_input),  # Use the path provided by the user
+        "dbtype": "sqlite3",
+        "standardization": db_standardization_operations_opt,
+        "removeHs": 1 if db_conformer_mode else 0,
+        "useTautomerHashv2": 0,
+        "registerConformers": 1 if db_conformer_mode else 0,
+        "numConformerDigits": 3,
+        "lwregSchema": ""  # Only relevant for PostgreSQL
+    }
+
+
     def configure(self, configure_context):
-        # Check if checkbox is checked
-        if not self.init_checkbox:
-            configure_context.set_warning("The checkbox must be checked to initialize the LWREG database.")
-            raise ValueError("You must confirm the initialization by checking the checkbox.")
-        
+
+        db_path = Path(self.db_path_input)
+
+        if db_path.exists():
+            configure_context.set_warning("The selected database file already exists. Nothing to do.")
+
         # Ensure a valid path is provided
         if not self.db_path_input or self.db_path_input.strip() == "":
             configure_context.set_warning("A valid path to the database must be provided.")
             raise ValueError("You must provide a valid path to the database.")
-        
+        if not db_path.parent.exists():
+            configure_context.set_warning(f"Directory {db_path.parent} does not exist.")
+            raise ValueError("You must provide a valid path to the database.")
+
         # No output schema, so we just return None.
         return None
 
     def execute(self, exec_context):
         """Executes LWREG database initialization if checkbox is checked."""
-        if self.init_checkbox:
+        exec_context.flow_variables["lwreg_db_path"] = self.db_path_input
+        if not Path(self.db_path_input).exists():
             exec_context.set_progress(0.0, "Initializing LWREG Database...")
-            
-            # Use the user-provided database path in the configuration
-            init_custom_config = {
-                "dbname": self.db_path_input,  # Use the path provided by the user
-                "dbtype": "sqlite3",
-                "standardization": "fragment",
-                "removeHs": 1,
-                "useTautomerHashv2": 0,
-                "registerConformers": 0,
-                "numConformerDigits": 3,
-                "lwregSchema": ""  # Only relevant for PostgreSQL
-            }
-            
             # Initialize the database using the provided path
             # using the internal function _initdb to bypass the prompt
-            utils._initdb(config=init_custom_config, confirm=True)
+            utils._initdb(config=self.init_custom_config, confirm=True)
 
             exec_context.set_progress(1.0, "LWREG Database initialized successfully.")
         else:
-            raise ValueError("Initialization not confirmed.")
+            exec_context.set_progress(1.0, "LWREG Database already exists. Nothing to do.")
 
 ################################
 ### LWReg Register Compounds ###
