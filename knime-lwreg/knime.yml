@@ -1,0 +1,10 @@
+name: lwreg_integration # Will be concatenated with the group_id to an ID
+author: Tugrul
+env_yml_path: <path/to/the/conda_env.yml> # This is necessary for bundling, but not needed during development
+extension_module: my_extension # The .py Python module containing the nodes of your extension
+description: lwreg KNIME integration # Human readable bundle name / description
+long_description: This extension is created for the workshop of the RDKit UGM and shall demonstrate the building of a Python based extension on the example of integrating the functionality of lwreg into the KNIME AP.
+group_id: knime.rdkitugm
+version: 0.1.0 # Version of this Python node extension
+vendor: KNIME AG, Zurich, Switzerland
+license_file: LICENSE.TXT # Best practice: put your LICENSE.TXT next to the knime.yml; otherwise you would need to change to path/to/LICENSE.txt
