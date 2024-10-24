@@ -21,7 +21,7 @@ lwreg.set_default_config(utils.defaultConfig()) # Configure LWReg with default s
 #################################
 ### LWReg Initialize Database ###
 #################################
-@knext.node(name="LWReg Initialize Database", node_type=knext.NodeType.SOURCE, icon_path="icon.png", category="/")
+@knext.node(name="LWReg Initialize Database", node_type=knext.NodeType.SOURCE, icon_path="db_init_icon.png", category="/")
 class LWRegInitNode:
     """Delete prior database and initialize new one.
     This node can be used to initialize a LWReg database. This deletes any saved data, so use with caution. Checkbox in configuration must be checked.    
@@ -192,7 +192,7 @@ class LWRegQueryNode:
         description="Specify the query to search the LWReg database (e.g., a SMILES string).",
         default_value=""
     )
-
+    
     def configure(self, configure_context):
         # Define the output schema with Query, Molregno, and Conf_ID (even if Conf_ID might not be present)
         output_schema = knext.Schema.from_columns([
