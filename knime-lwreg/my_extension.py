@@ -21,7 +21,7 @@ lwreg.set_default_config(utils.defaultConfig()) # Configure LWReg with default s
 #################################
 ### LWReg Initialize Database ###
 #################################
-@knext.node(name="LWReg Initialize Database", node_type=knext.NodeType.SOURCE, icon_path="icon.png", category="/")
+@knext.node(name="LWReg Initialize Database", node_type=knext.NodeType.SOURCE, icon_path="db_init_icon.png", category="/")
 class LWRegInitNode:
     """Delete prior database and initialize new one.
     This node can be used to initialize a LWReg database. This deletes any saved data, so use with caution. Checkbox in configuration must be checked.    
@@ -83,7 +83,7 @@ class LWRegInitNode:
 ################################
 ### LWReg Register Compounds ###
 ################################
-@knext.node(name="LWReg Register Compounds", node_type=knext.NodeType.MANIPULATOR, icon_path="icon.png", category="/")
+@knext.node(name="LWReg Register Compounds", node_type=knext.NodeType.MANIPULATOR, icon_path="db_register_icon.png", category="/")
 @knext.input_table(name="Input Compounds", description="Input table containing compounds to register.")
 @knext.output_table(name="Registration Results", description="Outputs registration results with compound IDs.")
 class LWRegRegisterNode:
@@ -172,7 +172,7 @@ class LWRegRegisterNode:
 ########################
 ### LWReg Query Node ###
 ########################
-@knext.node(name="LWReg Query", node_type=knext.NodeType.MANIPULATOR, icon_path="icon.png", category="/")
+@knext.node(name="LWReg Query", node_type=knext.NodeType.MANIPULATOR, icon_path="db_query_icon.png", category="/")
 @knext.output_table(name="Query Results", description="Outputs the results of a querey to the LWReg database.")
 class LWRegQueryNode:
     """Query the LWReg database.
@@ -242,7 +242,7 @@ class LWRegQueryNode:
 ###########################
 ### LWReg Retrieve Node ###
 ###########################        
-@knext.node(name="LWReg Retrieve", node_type=knext.NodeType.MANIPULATOR, icon_path="icon.png", category="/")
+@knext.node(name="LWReg Retrieve", node_type=knext.NodeType.MANIPULATOR, icon_path="db_retrieve_icon.png", category="/")
 @knext.input_table(name="Input Registry IDs", description="Input table containing molregnos (and optional conf_ids) to retrieve.")
 @knext.output_table(name="Retrieved Molecules", description="Outputs the retrieved molecules with their molregno and conf_id (if applicable).")
 class LWRegRetrieveNode:
