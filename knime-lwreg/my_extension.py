@@ -1,14 +1,14 @@
 import logging
 
 import knime.extension as knext
+import lwreg
 import numpy as np
 import pandas as pd
+from lwreg import utils
 
 LOGGER = logging.getLogger(__name__)
 
 # Importing LWReg: https://github.com/rinikerlab/lightweight-registration/
-import lwreg
-from lwreg import utils
 
 lwreg.set_default_config(utils.defaultConfig())  # Configure LWReg with default settings
 
