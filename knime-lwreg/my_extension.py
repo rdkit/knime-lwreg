@@ -353,9 +353,11 @@ class LWRegRetrieveNode:
         if "Conf_ID" in input_df.columns:
             # Extract Molregno and Conf_ID from DataFrame, flattening tuples
             ids = [
-                (int(row["Molregno"]), int(row["Conf_ID"]))
-                if not pd.isna(row["Conf_ID"])
-                else int(row["Molregno"])
+                (
+                    (int(row["Molregno"]), int(row["Conf_ID"]))
+                    if not pd.isna(row["Conf_ID"])
+                    else int(row["Molregno"])
+                )
                 for index, row in input_df.iterrows()
             ]
         else:
