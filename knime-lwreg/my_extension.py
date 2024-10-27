@@ -1,15 +1,19 @@
 import logging
+
 import knime.extension as knext
 import lwreg.standardization_lib
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 LOGGER = logging.getLogger(__name__)
 
 # Importing LWReg: https://github.com/rinikerlab/lightweight-registration/
+from pathlib import Path
+
 import lwreg
 from lwreg import utils
-from pathlib import Path
-lwreg.set_default_config(utils.defaultConfig()) # Configure LWReg with default settings
+
+lwreg.set_default_config(utils.defaultConfig())  # Configure LWReg with default settings
 
 # Specifying our category: https://docs.knime.com/latest/pure_python_node_extensions_guide/index.html#_specifying_the_node_category
 # lwreg_category = knext.category(
@@ -20,94 +24,115 @@ lwreg.set_default_config(utils.defaultConfig()) # Configure LWReg with default s
 #     icon="icon.png",
 # )
 
+
 #################################
 ### LWReg Initialize Database ###
 #################################
-@knext.node(name="LWReg Initialize Database", node_type=knext.NodeType.SOURCE, icon_path="icon.png", category="/")
+@knext.node(
+    name="LWReg Initialize Database",
+    node_type=knext.NodeType.SOURCE,
+    icon_path="icon.png",
+    category="/",
+)
 class LWRegInitNode:
     """Initialize new database
-    This node can be used to initialize a LWReg database. In case the database already exists, nothing happens.
-    Which Standardization should be applied?
+        This node can be used to initialize a LWReg database. In case the database already exists, nothing happens.
+        Which Standardization should be applied?
 
-| Option | Description |
-| ------- | ----------- |
-| none | does not modify the molecule |
-| sanitize | Standard RDKit standardization |
-| fragment | Fragment parent of molecule |
-| charge | Charge Parent of molecule |
-| tautomer | Tautomer parent of molecule |
+    | Option | Description |
+    | ------- | ----------- |
+    | none | does not modify the molecule |
+    | sanitize | Standard RDKit standardization |
+    | fragment | Fragment parent of molecule |
+    | charge | Charge Parent of molecule |
+    | tautomer | Tautomer parent of molecule |
 
     """
 
-    # String input to specify the database path
     db_path_input = knext.StringParameter(
         label="Database Path",
         description="Specify the full path to the LWREG database file.",
-        default_value="lwreg.sql"
+        default_value="lwreg.sql",
+    )
+    db_standardization_operations = knext.StringParameter(
+        label="Standardization Operation",
+        enum=["none", "sanitize", "fragment", "charge", "tautomer"],
+        default_value="fragment",
+        description="Which Standardization should be applied?",
+    )
+    db_remove_Hs = knext.BoolParameter(
+        "Remove Hydrogens", description="Should Hydrogens be removed?"
+    )
+    db_conformer_mode = knext.BoolParameter(
+        "Conformer Mode", description="Should Conformers be registered?"
+    )
+    db_canonical_orientation = knext.BoolParameter(
+        "Canonical Orientation", description="Should the orientation be canonicalized?"
     )
 
-    description = """
-Which Standardization should be applied?
-"""
-
-    db_standardization_operations = knext.StringParameter(label="Standardization Operation",
-                                                          enum=["none","sanitize","fragment","charge","tautomer"],
-                                                          default_value="fragment",
-                                                          description=description)
-    db_remove_Hs = knext.BoolParameter("Remove Hydrogens",description="Should Hydrogens be removed?")
-    db_conformer_mode = knext.BoolParameter("Conformer Mode",description="Should Conformers be registered?")
-    db_canonical_orientation = knext.BoolParameter("Canonical Orientation",description="Should the orientation be canonicalized?")
-    db_standardization_operations_opt = [db_standardization_operations,"canonicalize"] if db_standardization_operations else [db_standardization_operations]
-    
-    init_custom_config = {
-        "dbname": str(db_path_input),  # Use the path provided by the user
-        "dbtype": "sqlite3",
-        "standardization": db_standardization_operations_opt,
-        "removeHs": 1 if db_conformer_mode else 0,
-        "useTautomerHashv2": 0,
-        "registerConformers": 1 if db_conformer_mode else 0,
-        "numConformerDigits": 3,
-        "lwregSchema": ""  # Only relevant for PostgreSQL
-    }
-
-
     def configure(self, configure_context):
-
         db_path = Path(self.db_path_input)
 
         if db_path.exists():
-            configure_context.set_warning("The selected database file already exists. Nothing to do.")
+            configure_context.set_warning(
+                "The selected database file already exists. Nothing to do."
+            )
 
-        # Ensure a valid path is provided
         if not self.db_path_input or self.db_path_input.strip() == "":
-            configure_context.set_warning("A valid path to the database must be provided.")
+            configure_context.set_warning(
+                "A valid path to the database must be provided."
+            )
             raise ValueError("You must provide a valid path to the database.")
+
         if not db_path.parent.exists():
             configure_context.set_warning(f"Directory {db_path.parent} does not exist.")
             raise ValueError("You must provide a valid path to the database.")
 
-        # No output schema, so we just return None.
-        return None
-
     def execute(self, exec_context):
         """Executes LWREG database initialization if checkbox is checked."""
-        exec_context.flow_variables["lwreg_db_path"] = self.db_path_input
-        if not Path(self.db_path_input).exists():
-            exec_context.set_progress(0.0, "Initializing LWREG Database...")
-            # Initialize the database using the provided path
-            # using the internal function _initdb to bypass the prompt
-            utils._initdb(config=self.init_custom_config, confirm=True)
+        if Path(self.db_path_input).exists():
+            exec_context.set_progress(
+                1.0, "LWREG Database already exists. Nothing to do."
+            )
+            return
 
-            exec_context.set_progress(1.0, "LWREG Database initialized successfully.")
-        else:
-            exec_context.set_progress(1.0, "LWREG Database already exists. Nothing to do.")
+        standardization = [self.db_standardization_operations]
+        if self.db_canonical_orientation:
+            standardization.append("canonicalize")
+
+        init_custom_config = {
+            "dbname": self.db_path_input,
+            "dbtype": "sqlite3",
+            "standardization": standardization,
+            "removeHs": 1 if self.db_remove_Hs else 0,
+            "useTautomerHashv2": 0,
+            "registerConformers": 1 if self.db_conformer_mode else 0,
+            "numConformerDigits": 3,
+            "lwregSchema": "",  # Only relevant for PostgreSQL
+        }
+
+        exec_context.flow_variables["lwreg_db_path"] = self.db_path_input
+        exec_context.set_progress(0.0, "Initializing LWREG Database...")
+        utils._initdb(config=init_custom_config, confirm=True)
+        exec_context.set_progress(1.0, "LWREG Database initialized successfully.")
+
 
 ################################
 ### LWReg Register Compounds ###
 ################################
-@knext.node(name="LWReg Register Compounds", node_type=knext.NodeType.MANIPULATOR, icon_path="icon.png", category="/")
-@knext.input_table(name="Input Compounds", description="Input table containing compounds to register.")
-@knext.output_table(name="Registration Results", description="Outputs registration results with compound IDs.")
+@knext.node(
+    name="LWReg Register Compounds",
+    node_type=knext.NodeType.MANIPULATOR,
+    icon_path="icon.png",
+    category="/",
+)
+@knext.input_table(
+    name="Input Compounds", description="Input table containing compounds to register."
+)
+@knext.output_table(
+    name="Registration Results",
+    description="Outputs registration results with compound IDs.",
+)
 class LWRegRegisterNode:
     """Registers compounds to LWReg database.
     This node takes an input table of compounds (e.g., SMILES strings) and registers them into the LWReg database.
@@ -117,7 +142,7 @@ class LWRegRegisterNode:
     db_path_input = knext.StringParameter(
         label="Database Path",
         description="Specify the path to the LWREG database file.",
-        default_value="C:/path/to/your/lwreg_database.sqlt"
+        default_value="C:/path/to/your/lwreg_database.sqlt",
     )
 
     # String input to specify the column containing SMILES strings
@@ -128,11 +153,17 @@ class LWRegRegisterNode:
     )
 
     def configure(self, configure_context, input_schema):
-        output_schema = knext.Schema.from_columns([
-            knext.Column(knext.string(), "SMILES"),        # SMILES column will be a string
-            knext.Column(knext.double(), "Compound ID"),   # Compound ID will also be a string
-            knext.Column(knext.string(), "Status")         # Status will be a string
-            ])  
+        output_schema = knext.Schema.from_columns(
+            [
+                knext.Column(
+                    knext.string(), "SMILES"
+                ),  # SMILES column will be a string
+                knext.Column(
+                    knext.double(), "Compound ID"
+                ),  # Compound ID will also be a string
+                knext.Column(knext.string(), "Status"),  # Status will be a string
+            ]
+        )
         return output_schema
 
     def execute(self, exec_context, input_table):
@@ -146,7 +177,9 @@ class LWRegRegisterNode:
 
         # Extract SMILES column
         if self.smiles_column not in input_df.columns:
-            raise ValueError(f"Column '{self.smiles_column}' not found in the input data.")
+            raise ValueError(
+                f"Column '{self.smiles_column}' not found in the input data."
+            )
         smiles_data = input_df[self.smiles_column]
 
         # Create a list to store the registration results
@@ -161,41 +194,47 @@ class LWRegRegisterNode:
                 # Check if the compound_id is a failure reason, i.e., an instance of RegistrationFailureReasons
                 if isinstance(compound_id, lwreg.RegistrationFailureReasons):
                     status = f"Failed: {compound_id.name}"  # Get the name of the failure reason (e.g., PARSE_FAILURE)
-                    registration_results.append({
-                        "SMILES": smiles, 
-                        "Compound ID": np.nan, #np.nan does not throw KNIME off regarding data types, as None would. 
-                        "Status": status
-                    })  
+                    registration_results.append(
+                        {
+                            "SMILES": smiles,
+                            "Compound ID": np.nan,  # np.nan does not throw KNIME off regarding data types, as None would.
+                            "Status": status,
+                        }
+                    )
                 else:
                     status = "Success"
-                    registration_results.append({
-                        "SMILES": smiles, 
-                        "Compound ID": compound_id,
-                        "Status": status
-                    })  
+                    registration_results.append(
+                        {"SMILES": smiles, "Compound ID": compound_id, "Status": status}
+                    )
 
             except Exception as e:
                 LOGGER.error(f"Failed to register compound '{smiles}': {e}")
-                
-                # Handle unexpected exceptions
-                registration_results.append({
-                    "SMILES": smiles, 
-                    "Compound ID": np.nan, 
-                    "Status": f"Failed: {e}"
-                })
 
+                # Handle unexpected exceptions
+                registration_results.append(
+                    {"SMILES": smiles, "Compound ID": np.nan, "Status": f"Failed: {e}"}
+                )
 
         # Create a pandas DataFrame with the registration results
         results_df = pd.DataFrame(registration_results)
 
         # Return the results as a KNIME table
         return knext.Table.from_pandas(results_df)
-    
+
+
 ########################
 ### LWReg Query Node ###
 ########################
-@knext.node(name="LWReg Query", node_type=knext.NodeType.MANIPULATOR, icon_path="icon.png", category="/")
-@knext.output_table(name="Query Results", description="Outputs the results of a querey to the LWReg database.")
+@knext.node(
+    name="LWReg Query",
+    node_type=knext.NodeType.MANIPULATOR,
+    icon_path="icon.png",
+    category="/",
+)
+@knext.output_table(
+    name="Query Results",
+    description="Outputs the results of a querey to the LWReg database.",
+)
 class LWRegQueryNode:
     """Query the LWReg database.
     This node takes input parameters (e.g., SMILES) and queries the LWReg database.
@@ -205,23 +244,27 @@ class LWRegQueryNode:
     db_path_input = knext.StringParameter(
         label="Database Path",
         description="Specify the path to the LWREG database file.",
-        default_value="C:/path/to/your/lwreg_database.sqlt"
+        default_value="C:/path/to/your/lwreg_database.sqlt",
     )
 
     # String input for the query string (e.g., SMILES or substructure)
     query_input = knext.StringParameter(
         label="Query",
         description="Specify the query to search the LWReg database (e.g., a SMILES string).",
-        default_value=""
+        default_value="",
     )
 
     def configure(self, configure_context):
         # Define the output schema with Query, Molregno, and Conf_ID (even if Conf_ID might not be present)
-        output_schema = knext.Schema.from_columns([
-            knext.Column(knext.string(), "Query"),         # Query will be a string
-            knext.Column(knext.double(), "Molregno"),      # Molregno will be a double
-            knext.Column(knext.double(), "Conf_ID")        # Conf_ID will also be a double, optional but always present in schema
-    ])
+        output_schema = knext.Schema.from_columns(
+            [
+                knext.Column(knext.string(), "Query"),  # Query will be a string
+                knext.Column(knext.double(), "Molregno"),  # Molregno will be a double
+                knext.Column(
+                    knext.double(), "Conf_ID"
+                ),  # Conf_ID will also be a double, optional but always present in schema
+            ]
+        )
         return output_schema
 
     def execute(self, exec_context):
@@ -237,7 +280,9 @@ class LWRegQueryNode:
             # Check if the result contains tuples (i.e., molregno and conf_id)
             if query_results and isinstance(query_results[0], tuple):
                 # Results are tuples, so we have Molregno and Conf_ID
-                results_df = pd.DataFrame(query_results, columns=["Molregno", "Conf_ID"])
+                results_df = pd.DataFrame(
+                    query_results, columns=["Molregno", "Conf_ID"]
+                )
                 # Convert Molregno and Conf_ID to float (double)
                 results_df["Molregno"] = results_df["Molregno"].astype(float)
                 results_df["Conf_ID"] = results_df["Conf_ID"].astype(float)
@@ -250,7 +295,9 @@ class LWRegQueryNode:
                 results_df["Conf_ID"] = np.nan
 
             # Add the "Query" column first
-            results_df.insert(0, "Query", self.query_input)  # Insert the query input as the first column
+            results_df.insert(
+                0, "Query", self.query_input
+            )  # Insert the query input as the first column
 
             exec_context.set_progress(1.0, "Query completed successfully.")
 
@@ -260,13 +307,25 @@ class LWRegQueryNode:
         except Exception as e:
             LOGGER.error(f"Query failed: {e}")
             raise ValueError(f"Failed to query the LWReg database: {e}")
-        
+
+
 ###########################
 ### LWReg Retrieve Node ###
-###########################        
-@knext.node(name="LWReg Retrieve", node_type=knext.NodeType.MANIPULATOR, icon_path="icon.png", category="/")
-@knext.input_table(name="Input Registry IDs", description="Input table containing molregnos (and optional conf_ids) to retrieve.")
-@knext.output_table(name="Retrieved Molecules", description="Outputs the retrieved molecules with their molregno and conf_id (if applicable).")
+###########################
+@knext.node(
+    name="LWReg Retrieve",
+    node_type=knext.NodeType.MANIPULATOR,
+    icon_path="icon.png",
+    category="/",
+)
+@knext.input_table(
+    name="Input Registry IDs",
+    description="Input table containing molregnos (and optional conf_ids) to retrieve.",
+)
+@knext.output_table(
+    name="Retrieved Molecules",
+    description="Outputs the retrieved molecules with their molregno and conf_id (if applicable).",
+)
 class LWRegRetrieveNode:
     """Retrieve from the LWReg database.
     Retrieve molecules from the LWReg database using registry IDs as input.
@@ -276,23 +335,29 @@ class LWRegRetrieveNode:
     db_path_input = knext.StringParameter(
         label="Database Path",
         description="Specify the path to the LWREG database file.",
-        default_value="C:/path/to/your/lwreg_database.sqlt"
+        default_value="C:/path/to/your/lwreg_database.sqlt",
     )
 
     # Optionally choose to retrieve data as submitted
     as_submitted = knext.BoolParameter(
         label="Retrieve as submitted",
         description="If checked, retrieves the structure as originally submitted.",
-        default_value=False
+        default_value=False,
     )
 
     def configure(self, configure_context, input_schema):
         # Define the output schema
-        output_schema = knext.Schema.from_columns([
-            knext.Column(knext.double(), "Molregno"),      # Molregno will be a double
-            knext.Column(knext.double(), "Conf_ID"),       # Conf_ID will be a double, optional but always present in schema
-            knext.Column(knext.string(), "Molecule Data")  # Molecule Data will be a string
-        ])
+        output_schema = knext.Schema.from_columns(
+            [
+                knext.Column(knext.double(), "Molregno"),  # Molregno will be a double
+                knext.Column(
+                    knext.double(), "Conf_ID"
+                ),  # Conf_ID will be a double, optional but always present in schema
+                knext.Column(
+                    knext.string(), "Molecule Data"
+                ),  # Molecule Data will be a string
+            ]
+        )
         return output_schema
 
     def execute(self, exec_context, input_table):
@@ -308,8 +373,12 @@ class LWRegRetrieveNode:
         ids = []
         if "Conf_ID" in input_df.columns:
             # Extract Molregno and Conf_ID from DataFrame, flattening tuples
-            ids = [(int(row['Molregno']), int(row['Conf_ID'])) if not pd.isna(row['Conf_ID']) else int(row['Molregno']) 
-                   for index, row in input_df.iterrows()]
+            ids = [
+                (int(row["Molregno"]), int(row["Conf_ID"]))
+                if not pd.isna(row["Conf_ID"])
+                else int(row["Molregno"])
+                for index, row in input_df.iterrows()
+            ]
         else:
             # Only Molregno is provided
             ids = input_df["Molregno"].astype(int).tolist()
@@ -317,9 +386,7 @@ class LWRegRetrieveNode:
         # Call lwreg.retrieve with the list of IDs
         try:
             retrieval_results = lwreg.retrieve(
-                config=None, 
-                ids=ids, 
-                as_submitted=self.as_submitted
+                config=None, ids=ids, as_submitted=self.as_submitted
             )
 
             # Process retrieval results into a DataFrame
@@ -331,11 +398,9 @@ class LWRegRetrieveNode:
                     molregno = key
                     conf_id = np.nan  # If Conf_ID is not available
 
-                results.append({
-                    "Molregno": molregno,
-                    "Conf_ID": conf_id,
-                    "Molecule Data": data
-                })
+                results.append(
+                    {"Molregno": molregno, "Conf_ID": conf_id, "Molecule Data": data}
+                )
 
             # Convert results to a DataFrame
             results_df = pd.DataFrame(results)
