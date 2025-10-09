@@ -47,7 +47,7 @@ class LWRegInitNode:
     | tautomer | Tautomer parent of molecule |
 
     """
-  
+
     db_path_input = knext.StringParameter(
         label="Database Path",
         description="Specify the full path to the LWREG database file.",
