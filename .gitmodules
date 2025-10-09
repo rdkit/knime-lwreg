@@ -1,0 +1,3 @@
+[submodule "knime_lwreg/lightweight-registration"]
+	path = knime_lwreg/lightweight-registration
+	url = https://github.com/rinikerlab/lightweight-registration.git

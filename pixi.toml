@@ -21,9 +21,6 @@ tqdm = "*"
 click = "*"
 pip = "*"
 
-[pypi-dependencies]
-lwreg = { git = "https://github.com/rinikerlab/lightweight-registration" }
-
 [feature.build.dependencies]
 python = "3.9.*"
 knime-extension-bundling = "5.7.*"
