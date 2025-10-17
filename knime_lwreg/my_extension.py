@@ -1,23 +1,13 @@
 import logging
-import sys
 from pathlib import Path
 
 import knime.extension as knext
+import lwreg
 import numpy as np
 import pandas as pd
+from lwreg import utils
 
 LOGGER = logging.getLogger(__name__)
-
-# Add the lightweight-registration submodule to the Python path
-_current_dir = Path(__file__).parent
-_lwreg_path = _current_dir / "lightweight-registration"
-if _lwreg_path.exists() and str(_lwreg_path) not in sys.path:
-    sys.path.insert(0, str(_lwreg_path))
-
-# Now import lwreg after adding to path
-import lwreg
-import lwreg.standardization_lib
-from lwreg import utils
 
 # Importing LWReg: https://github.com/rinikerlab/lightweight-registration/
 lwreg.set_default_config(utils.defaultConfig())  # Configure LWReg with default settings
