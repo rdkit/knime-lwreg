@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import knime.extension as knext
 
-from knime_lwreg import LWRegInitNode
+from knime_lwreg import LWRegInitNode, LWRegQueryNode, LWRegRegisterNode, LWRegRetrieveNode
 
 
 class TestLWRegInitNode(unittest.TestCase):
@@ -76,8 +76,6 @@ class TestLWRegRegisterNode(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        # Import the node class
-        from knime_lwreg.my_extension import LWRegRegisterNode
         self.LWRegRegisterNode = LWRegRegisterNode
 
     def test_configure_creates_correct_schema(self):
@@ -115,7 +113,6 @@ class TestLWRegQueryNode(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        from knime_lwreg.my_extension import LWRegQueryNode
         self.LWRegQueryNode = LWRegQueryNode
 
     def test_configure_creates_correct_schema(self):
@@ -147,7 +144,6 @@ class TestLWRegRetrieveNode(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        from knime_lwreg.my_extension import LWRegRetrieveNode
         self.LWRegRetrieveNode = LWRegRetrieveNode
 
     def test_configure_creates_correct_schema(self):
