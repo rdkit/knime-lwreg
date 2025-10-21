@@ -1,6 +1,5 @@
 import unittest
 import tempfile
-import os
 from pathlib import Path
 import knime.extension as knext
 
@@ -12,21 +11,19 @@ class TestLWRegInitNode(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures before each test method."""
-        # Create a temporary directory for test databases
-        self.temp_dir = tempfile.mkdtemp()
-        self.test_db_path = os.path.join(self.temp_dir, "test_lwreg.db")
+        self.temp_dir = Path(tempfile.mkdtemp())
+        self.test_db_path = self.temp_dir / "test_lwreg.db"
 
     def tearDown(self):
         """Clean up after each test method."""
-        # Clean up test database if it exists
-        if os.path.exists(self.test_db_path):
-            os.remove(self.test_db_path)
-        os.rmdir(self.temp_dir)
+        if self.test_db_path.exists():
+            self.test_db_path.unlink()
+        self.temp_dir.rmdir()
 
     def test_configure_with_valid_path(self):
         """Test that configure works with a valid database path."""
         node = LWRegInitNode()
-        node.db_path_input = self.test_db_path
+        node.db_path_input = self.test_db_path.as_posix()
         node.db_standardization_operations = "fragment"
         node.db_remove_Hs = False
         node.db_conformer_mode = False
@@ -52,10 +49,10 @@ class TestLWRegInitNode(unittest.TestCase):
     def test_configure_with_existing_database(self):
         """Test that configure shows warning when database already exists."""
         # Create an empty file to simulate existing database
-        Path(self.test_db_path).touch()
+        self.test_db_path.touch()
         
         node = LWRegInitNode()
-        node.db_path_input = self.test_db_path
+        node.db_path_input = self.test_db_path.as_posix()
         
         class MockConfigureContext:
             def __init__(self):
