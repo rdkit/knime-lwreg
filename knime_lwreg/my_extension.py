@@ -3,7 +3,6 @@ from pathlib import Path
 
 import knime.extension as knext
 import lwreg
-import lwreg.standardization_lib
 import numpy as np
 import pandas as pd
 from lwreg import utils
@@ -11,7 +10,6 @@ from lwreg import utils
 LOGGER = logging.getLogger(__name__)
 
 # Importing LWReg: https://github.com/rinikerlab/lightweight-registration/
-
 lwreg.set_default_config(utils.defaultConfig())  # Configure LWReg with default settings
 
 # Specifying our category: https://docs.knime.com/latest/pure_python_node_extensions_guide/index.html#_specifying_the_node_category
@@ -47,7 +45,7 @@ class LWRegInitNode:
     | tautomer | Tautomer parent of molecule |
 
     """
-  
+
     db_path_input = knext.StringParameter(
         label="Database Path",
         description="Specify the full path to the LWREG database file.",
