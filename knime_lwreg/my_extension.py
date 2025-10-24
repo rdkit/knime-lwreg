@@ -15,7 +15,7 @@ lwreg.set_default_config(utils.defaultConfig())  # Configure LWReg with default 
 lwreg_category = knext.category(
     path="/community",
     level_id="lwreg",
-    name="Lightweight Registration",
+    name="lwreg",
     description="lwreg KNIME Integration",
     icon="icons/lwreg.png",
 )
@@ -25,7 +25,7 @@ lwreg_category = knext.category(
 ### LWReg Initialize Database ###
 #################################
 @knext.node(
-    name="lwreg Initialize Database",
+    name="Initialize Database",
     node_type=knext.NodeType.SOURCE,
     icon_path="icons/db_init.png",
     category=lwreg_category,
@@ -117,7 +117,7 @@ class LWRegInitNode:
 ### LWReg Register Compounds ###
 ################################
 @knext.node(
-    name="lwreg Register Compounds",
+    name="Register Compounds",
     node_type=knext.NodeType.MANIPULATOR,
     icon_path="icons/db_register.png",
     category=lwreg_category,
@@ -222,7 +222,7 @@ class LWRegRegisterNode:
 ### LWReg Query Node ###
 ########################
 @knext.node(
-    name="lwreg Query",
+    name="Query",
     node_type=knext.NodeType.MANIPULATOR,
     icon_path="icons/db_query.png",
     category=lwreg_category,
@@ -309,7 +309,7 @@ class LWRegQueryNode:
 ### LWReg Retrieve Node ###
 ###########################
 @knext.node(
-    name="lwreg Retrieve",
+    name="Retrieve",
     node_type=knext.NodeType.MANIPULATOR,
     icon_path="icons/db_retrieve.png",
     category=lwreg_category,
