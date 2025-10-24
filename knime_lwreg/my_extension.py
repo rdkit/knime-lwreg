@@ -28,7 +28,7 @@ lwreg.set_default_config(utils.defaultConfig())  # Configure LWReg with default 
 @knext.node(
     name="LWReg Initialize Database",
     node_type=knext.NodeType.SOURCE,
-    icon_path="icon.png",
+    icon_path="../icons/db_init.png",
     category="/",
 )
 class LWRegInitNode:
@@ -120,7 +120,7 @@ class LWRegInitNode:
 @knext.node(
     name="LWReg Register Compounds",
     node_type=knext.NodeType.MANIPULATOR,
-    icon_path="icon.png",
+    icon_path="../icons/db_register.png",
     category="/",
 )
 @knext.input_table(
@@ -225,7 +225,7 @@ class LWRegRegisterNode:
 @knext.node(
     name="LWReg Query",
     node_type=knext.NodeType.MANIPULATOR,
-    icon_path="icon.png",
+    icon_path="../icons/db_query.png",
     category="/",
 )
 @knext.output_table(
@@ -312,7 +312,7 @@ class LWRegQueryNode:
 @knext.node(
     name="LWReg Retrieve",
     node_type=knext.NodeType.MANIPULATOR,
-    icon_path="icon.png",
+    icon_path="../icons/db_retrieve.png",
     category="/",
 )
 @knext.input_table(
