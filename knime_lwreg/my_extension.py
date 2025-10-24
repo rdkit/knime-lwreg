@@ -12,24 +12,23 @@ LOGGER = logging.getLogger(__name__)
 # Importing LWReg: https://github.com/rinikerlab/lightweight-registration/
 lwreg.set_default_config(utils.defaultConfig())  # Configure LWReg with default settings
 
-# Specifying our category: https://docs.knime.com/latest/pure_python_node_extensions_guide/index.html#_specifying_the_node_category
-# lwreg_category = knext.category(
-#     path="/community",
-#     level_id="lwreg_integration",
-#     name="LWReg Integration",
-#     description="LWReg KNIME Integration",
-#     icon="icon.png",
-# )
+lwreg_category = knext.category(
+    path="/community",
+    level_id="lwreg",
+    name="lwreg",
+    description="lwreg KNIME Integration",
+    icon="icons/lwreg.png",
+)
 
 
 #################################
 ### LWReg Initialize Database ###
 #################################
 @knext.node(
-    name="LWReg Initialize Database",
+    name="Initialize Database",
     node_type=knext.NodeType.SOURCE,
-    icon_path="icon.png",
-    category="/",
+    icon_path="icons/db_init.png",
+    category=lwreg_category,
 )
 class LWRegInitNode:
     """Initialize new database
@@ -118,10 +117,10 @@ class LWRegInitNode:
 ### LWReg Register Compounds ###
 ################################
 @knext.node(
-    name="LWReg Register Compounds",
+    name="Register Compounds",
     node_type=knext.NodeType.MANIPULATOR,
-    icon_path="icon.png",
-    category="/",
+    icon_path="icons/db_register.png",
+    category=lwreg_category,
 )
 @knext.input_table(
     name="Input Compounds", description="Input table containing compounds to register."
@@ -223,10 +222,10 @@ class LWRegRegisterNode:
 ### LWReg Query Node ###
 ########################
 @knext.node(
-    name="LWReg Query",
+    name="Query",
     node_type=knext.NodeType.MANIPULATOR,
-    icon_path="icon.png",
-    category="/",
+    icon_path="icons/db_query.png",
+    category=lwreg_category,
 )
 @knext.output_table(
     name="Query Results",
@@ -310,10 +309,10 @@ class LWRegQueryNode:
 ### LWReg Retrieve Node ###
 ###########################
 @knext.node(
-    name="LWReg Retrieve",
+    name="Retrieve",
     node_type=knext.NodeType.MANIPULATOR,
-    icon_path="icon.png",
-    category="/",
+    icon_path="icons/db_retrieve.png",
+    category=lwreg_category,
 )
 @knext.input_table(
     name="Input Registry IDs",
