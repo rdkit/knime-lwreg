@@ -1,3 +1,8 @@
-from .my_extension import LWRegInitNode
+from .my_extension import (
+    LWRegInitNode,
+    LWRegQueryNode,
+    LWRegRegisterNode,
+    LWRegRetrieveNode,
+)
 
-__all__ = ["LWRegInitNode"]
+__all__ = ["LWRegInitNode", "LWRegQueryNode", "LWRegRegisterNode", "LWRegRetrieveNode"]
