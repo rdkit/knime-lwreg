@@ -16,7 +16,7 @@ lwreg_category = knext.category(
     path="/community",
     level_id="lwreg",
     name="Lightweight Registration",
-    description="LWReg KNIME Integration",
+    description="lwreg KNIME Integration",
     icon="icons/lwreg.png",
 )
 
@@ -25,7 +25,7 @@ lwreg_category = knext.category(
 ### LWReg Initialize Database ###
 #################################
 @knext.node(
-    name="LWReg Initialize Database",
+    name="lwreg Initialize Database",
     node_type=knext.NodeType.SOURCE,
     icon_path="icons/db_init.png",
     category=lwreg_category,
@@ -117,7 +117,7 @@ class LWRegInitNode:
 ### LWReg Register Compounds ###
 ################################
 @knext.node(
-    name="LWReg Register Compounds",
+    name="lwreg Register Compounds",
     node_type=knext.NodeType.MANIPULATOR,
     icon_path="icons/db_register.png",
     category=lwreg_category,
@@ -222,7 +222,7 @@ class LWRegRegisterNode:
 ### LWReg Query Node ###
 ########################
 @knext.node(
-    name="LWReg Query",
+    name="lwreg Query",
     node_type=knext.NodeType.MANIPULATOR,
     icon_path="icons/db_query.png",
     category=lwreg_category,
@@ -309,7 +309,7 @@ class LWRegQueryNode:
 ### LWReg Retrieve Node ###
 ###########################
 @knext.node(
-    name="LWReg Retrieve",
+    name="lwreg Retrieve",
     node_type=knext.NodeType.MANIPULATOR,
     icon_path="icons/db_retrieve.png",
     category=lwreg_category,
